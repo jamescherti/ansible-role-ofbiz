@@ -1,0 +1,327 @@
+---
+#
+# Copyright (c) 2021 James Cherti
+# GitHub: https://github.com/jamescherti/ansible-role-ofbiz
+#
+# Distributed under terms of the MIT license.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+- name: "Assertions"
+  assert:
+    that:
+      - 'ofbiz_version != ""'
+    msg: "You need to define the variable 'ofbiz_version' (e.g. ofbiz_version: '17.12.07')."
+
+- name: "Ubuntu packages"
+  when: ansible_distribution == "Ubuntu"
+  block:
+    - name: "Add OpenJDK Apt key"
+      apt_key:
+        id: "0xeb9b1d8886f44e2a"
+        keyserver: keyserver.ubuntu.com
+
+    # configure PPA for OpenJDK uploads (restricted) team https://launchpad.net/~openjdk-r/+archive/ubuntu/ppa
+    - name: "Configure Ubuntu OpenJDK Apt repository"
+      apt_repository:
+        repo: "deb http://ppa.launchpad.net/openjdk-r/ppa/ubuntu {{ apt_mirror_release }} main"
+      register: _ubuntu_repository_added
+
+    - name: "Update apt cache and install Debian dependencies"
+      apt:
+        force_apt_get: true
+        update_cache: true
+        cache_valid_time: 3600
+      changed_when: false
+      when: _ubuntu_repository_added.changed or ofbiz_update_package_manager_cache|bool
+
+    - name: "Install Ubuntu dependencies"
+      block:
+        - name: "Install OFBiz dependencies with apt"
+          apt:
+            force_apt_get: true
+            name:
+              - gnupg
+              - unzip
+              - adoptopenjdk-8-hotspot
+
+    - name: "Install OpenJDK"
+      package:
+        name: "openjdk-8-jdk-headless"
+
+- name: "Debian packages"
+  when: ansible_distribution == "Debian"
+  block:
+    - name: "Update apt cache"
+      apt:
+        force_apt_get: true
+        update_cache: true
+        cache_valid_time: 3600
+      changed_when: false
+      when: ofbiz_update_package_manager_cache|bool
+
+    - name: "Install Debian dependencies"
+      when: ansible_os_family == "Debian"
+      block:
+        - name: "Install Debian dependencies"
+          apt:
+            force_apt_get: true
+            name:
+              - gnupg
+              - apt-transport-https
+              - unzip
+
+    - name: "Add OpenJDK Apt key"
+      apt_key:
+        keyserver: "pool.sks-keyservers.net"
+        id: "8AC3B29174885C03"
+
+    - name: "Configure Debian Apt Repository"
+      apt_repository:
+        repo: "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb {{ ansible_distribution_release }} main"
+        update_cache: true
+      register: _debian_repository_added
+
+    - name: "Update Apt cache"
+      apt:
+        force_apt_get: true
+        update_cache: true
+        cache_valid_time: 3600
+      changed_when: false
+      when: _debian_repository_added.changed or ofbiz_update_package_manager_cache|bool
+
+    - name: "Install Debian dependencies"
+      when: ansible_os_family == "Debian"
+      block:
+        - name: "Install OFBiz dependencies with apt"
+          apt:
+            force_apt_get: true
+            name:
+              - adoptopenjdk-8-hotspot
+
+- name: "Arch Linux packages"
+  when: ansible_os_family == "Archlinux"
+  block:
+    - name: "Pacman update cache"
+      pacman: update_cache=true
+      changed_when: false
+      when: ofbiz_update_package_manager_cache|bool
+
+    - name: "Install Arch Linux dependencies"
+      pacman:
+        name:
+          - gnupg
+          - jdk8-openjdk
+          - unzip
+
+- name: "OFBiz user"
+  block:
+    - name: "Create group '{{ ofbiz_user_group }}'"
+      group:
+        name: "{{ ofbiz_user_group }}"
+        gid: "{{ ofbiz_user_gid }}"
+
+    - name: "Create user '{{ ofbiz_user }}'"
+      user:
+        name: "{{ ofbiz_user }}"
+        uid: "{{ ofbiz_user_uid }}"
+        group: "{{ ofbiz_user_group }}"
+        home: "{{ ofbiz_user_home }}"
+        shell: "{{ ofbiz_user_shell }}"
+        createhome: true
+
+    - name: "Dir permissions {{ ofbiz_user_home }}"
+      file:
+        state: directory
+        path: "{{ ofbiz_user_home }}"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0700
+
+    - name: "File {{ ofbiz_user_home }}/.bashrc"
+      copy:
+        dest: "{{ ofbiz_user_home }}/.bashrc"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0644
+        content: |
+          # ~/.bashrc
+          # If not running interactively, don't do anything
+          [[ $- != *i* ]] && return
+          alias ls='ls --color=auto'
+          PS1='[\u@\h \W]\$ '
+          source "{{ (ofbiz_user_home + '/env.sh') }}"
+
+- name: "OFBiz download"
+  environment:
+    http_proxy: "{{ ofbiz_proxy }}"
+    https_proxy: "{{ ofbiz_proxy }}"
+    HTTP_PROXY: ""
+    HTTPS_PROXY: ""
+  block:
+    - name: "Create OFBiz downloads directory"
+      file:
+        state: directory
+        path: "{{ ofbiz_user_home }}/downloads"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0755
+
+    - name: "Check the existence of {{ ofbiz_user_home }}/downloads/KEYS"
+      stat:
+        path: "{{ ofbiz_user_home }}/downloads/KEYS"
+      register: _gpg_keys_file
+
+    - name: "Download OFBiz developers GPG keys 'KEYS'"
+      get_url:
+        dest: "{{ ofbiz_user_home }}/downloads/KEYS"
+        url: https://downloads.apache.org/ofbiz/KEYS
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0644
+        checksum: "{{ _ofbiz_dev_gpg_keys_checksum }}"
+        use_proxy: "{{ 'yes' if ofbiz_proxy != '' else 'no' }}"
+      register: _ofbiz_dev_keys
+      when: not _gpg_keys_file.stat.exists
+
+    - name: "Import OFBiz developers GPG keys"
+      command: gpg --import KEYS
+      args:
+        chdir: "{{ ofbiz_user_home }}/downloads"
+      become: true
+      become_user: "{{ ofbiz_user }}"
+      when: _ofbiz_dev_keys.changed
+
+    - name: "Check the existence of {{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip"
+      stat:
+        path: "{{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip"
+      register: _ofbiz_zip_archive_file
+
+    - name: "Download OFBiz ZIP file"
+      get_url:
+        dest: "{{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip"
+        url: "https://mirror.csclub.uwaterloo.ca/apache/ofbiz/apache-ofbiz-{{ ofbiz_version }}.zip"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0644
+        # checksum: "{{ ofbiz_checksum }}"
+        use_proxy: "{{ 'yes' if ofbiz_proxy != '' else 'no' }}"
+      when: not _ofbiz_zip_archive_file.stat.exists
+
+    - name: "Check the existence of {{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip.asc"
+      stat:
+        path: "{{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip.asc"
+      register: _ofbiz_gpg_signature_file
+
+    - name: "Download OFBiz GPG signature"
+      get_url:
+        dest: "{{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip.asc"
+        url: "https://downloads.apache.org/ofbiz/apache-ofbiz-{{ ofbiz_version }}.zip.asc"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0644
+        use_proxy: "{{ 'yes' if ofbiz_proxy != '' else 'no' }}"
+      when: not _ofbiz_gpg_signature_file.stat.exists
+
+    - name: "Check GPG signature of Apache OFBiz ZIP file"
+      command:
+        argv:
+          - "gpg"
+          - "--verify"
+          - "{{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip.asc"
+          - "{{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip"
+      args:
+        chdir: "{{ ofbiz_user_home }}/downloads"
+      become: true
+      become_user: "{{ ofbiz_user }}"
+      changed_when: false
+
+- name: "Extract OFBiz archive"
+  block:
+    - name: "Create the directory where OFBiz will be extracted"
+      file:
+        state: directory
+        path: "{{ item }}"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0755
+      loop:
+        - "{{ ofbiz_user_home }}/ofbiz"
+        - "{{ _ofbiz_dir }}"
+
+    - name: "Extract Apache OFBiz"
+      unarchive:
+        src: "{{ ofbiz_user_home }}/downloads/apache-ofbiz-{{ ofbiz_version }}.zip"
+        dest: "{{ _ofbiz_dir }}"
+        remote_src: true
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        creates: "{{ _ofbiz_extraction_dir }}"
+
+    - name: "File {{ ofbiz_user_home }}/env.sh"
+      copy:
+        dest: "{{ ofbiz_user_home }}/env.sh"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+        mode: 0644
+        content: |
+          if [[ -d /usr/lib/jvm/java-8-openjdk/jre/bin ]]; then
+            # specific to Arch Linux
+            export PATH="/usr/lib/jvm/java-8-openjdk/jre/bin/:$PATH"
+          fi
+
+          {% if ofbiz_proxy != "" %}
+          export http_proxy="{{ ofbiz_proxy }}"
+          export https_proxy="{{ ofbiz_proxy }}"
+          export HTTPS_PROXY=""
+          export HTTP_PROXY=""
+          {% endif %}
+          export JAVA_OPTS="{{ ofbiz_java_opts }}"
+          {% if ansible_os_family == 'Archlinux' %}
+          export PATH=/usr/lib/jvm/java-8-openjdk/bin:$PATH
+          {% endif %}
+
+    - name: "Link {{ ofbiz_user_home }}/current"
+      file:
+        state: link
+        dest: "{{ ofbiz_user_home }}/current"
+        src: "{{ _ofbiz_extraction_dir }}"
+        owner: "{{ ofbiz_user }}"
+        group: "{{ ofbiz_user_group }}"
+
+    - name: "Run: gradle/init-gradle-wrapper.sh"
+      command:
+        argv:
+          - './gradle/init-gradle-wrapper.sh'
+      args:
+        warn: false
+        chdir: "{{ _ofbiz_extraction_dir }}"
+        creates: "{{ _ofbiz_extraction_dir }}/gradle/wrapper/gradle-wrapper.jar"
+      become: true
+      become_user: "{{ ofbiz_user }}"
+
+    - name: "Add lines to gradlew"
+      lineinfile:
+        path: "{{ _ofbiz_extraction_dir }}/gradlew"
+        insertafter: '^#!/usr/bin/env sh'
+        line: "{{ item }}"
+      loop:
+        - 'source {{ ofbiz_user_home }}/env.sh'
+        - '[[ `id -u` -eq 0 ]] && exit 1'

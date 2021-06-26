@@ -1,0 +1,24 @@
+---
+#
+# Copyright (c) 2021 James Cherti
+# GitHub: https://github.com/jamescherti/ansible-role-ofbiz
+#
+# Distributed under terms of the MIT license.
+#
+
+ofbiz_java_opts: "-Xmx2048m"
+
+ofbiz_user_home: "/opt/ofbiz"
+ofbiz_user: ofbiz
+ofbiz_user_group: ofbiz
+ofbiz_user_shell: /bin/bash
+ofbiz_user_uid: 454
+ofbiz_user_gid: 454
+
+ofbiz_proxy: ""
+
+ofbiz_update_package_manager_cache: true
+
+_ofbiz_dev_gpg_keys_checksum: "sha512:018340d3b0f4b432f942b994d87683960f254ead029fb595b4d96c2d9fc97e8b07fc20d45acd8edc095634ff8c6cb0421e59cc4178d07eacf8250b2c04139882"
+_ofbiz_dir: "{{ ofbiz_user_home }}/ofbiz/{{ ofbiz_version }}"
+_ofbiz_extraction_dir: "{{ _ofbiz_dir }}/apache-ofbiz-{{ ofbiz_version }}"
