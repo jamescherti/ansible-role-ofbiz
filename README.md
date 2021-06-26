@@ -42,7 +42,7 @@ The command above will load the data:
 
 Run Apache OFBiz:
 ```shell
-./gradlew ofbiz
+$ ./gradlew ofbiz
 ```
 
 Visit Apache OFBiz through your browser:
