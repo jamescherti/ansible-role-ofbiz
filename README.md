@@ -54,7 +54,7 @@ By default, you can log in with the user 'admin' and password 'ofbiz'.
 
 ## Links
 - [Ansible role OFBiz (GitHub repository)](https://github.com/jamescherti/ansible-role-ofbiz)
-- [Install Apache OFBiz without demo data](<https://cwiki.apache.org/confluence/display/OFBIZ/How+to+Install+Apache OFBiz+without+the+Demo+Data>)
-- [Apache OFBiz Tutorial - A Beginners Development Guide](<https://cwiki.apache.org/confluence/display/OFBIZ/Apache OFBiz+Tutorial+-+A+Beginners+Development+Guide>)
+- [Install Apache OFBiz without demo data](https://cwiki.apache.org/confluence/display/OFBIZ/How+to+Install+OFBiz+without+the+Demo+Data)
+- [Apache OFBiz Tutorial - A Beginners Development Guide](https://cwiki.apache.org/confluence/display/OFBIZ/OFBiz+Tutorial+-+A+Beginners+Development+Guide)
 - [Apache OFBiz videos on YouTube](https://www.youtube.com/user/ofbiz) and [Apache OFBiz videos on Vimeo](https://vimeo.com/user2598348/videos/)
 - [Apache OFBiz mailing lists](https://ofbiz.apache.org/mailing-lists.html)
