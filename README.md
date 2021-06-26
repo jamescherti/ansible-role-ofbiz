@@ -1,5 +1,5 @@
 # ansible-role-ofbiz
-[ansible-role-ofbiz](https://github.com/jamescherti/ansible-role-ofbiz) is an **Ansible role** that **installs Apache OFBiz** on Linux operating systems (Debian, Ubuntu, and Arch Linux).
+[Ansible-role-ofbiz](https://github.com/jamescherti/ansible-role-ofbiz) is an **Ansible role** that **installs Apache OFBiz** on Linux operating systems (Debian, Ubuntu, and Arch Linux).
 
 ## Author
 - [James Cherti](https://github.com/jamescherti/)
@@ -11,7 +11,7 @@
    ofbiz_version: "17.12.07"}
 ```
 
-## Run OFBiz for the first time
+## Run Apache OFBiz for the first time
 
 After Apache OFBiz is installed by this Ansible role:
 
