@@ -1,5 +1,5 @@
 # ansible-role-ofbiz
-[ansible-role-ofbiz](https://github.com/jamescherti/ansible-role-ofbiz) is an **Ansible role** that can be used to **install Apache OFBiz**.
+[ansible-role-ofbiz](https://github.com/jamescherti/ansible-role-ofbiz) is an **Ansible role** that can be used to **install Apache OFBiz** on Linux operating systems (Debian, Ubuntu, and Arch Linux).
 
 ## Author
 - [James Cherti](https://github.com/jamescherti/)
