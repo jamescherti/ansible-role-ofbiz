@@ -78,7 +78,7 @@
       when: ofbiz_update_package_manager_cache|bool
 
     - name: "Install Debian dependencies"
-      when: ansible_os_family == "Debian"
+      when: ansible_facts.os_family == "Debian"
       block:
         - name: "Install Debian dependencies"
           apt:
@@ -108,7 +108,7 @@
       when: _debian_repository_added.changed or ofbiz_update_package_manager_cache|bool
 
     - name: "Install Debian dependencies"
-      when: ansible_os_family == "Debian"
+      when: ansible_facts.os_family == "Debian"
       block:
         - name: "Install OFBiz dependencies with apt"
           apt:
@@ -117,7 +117,7 @@
               - adoptopenjdk-8-hotspot
 
 - name: "Arch Linux packages"
-  when: ansible_os_family == "Archlinux"
+  when: ansible_facts.os_family == "Archlinux"
   block:
     - name: "Pacman update cache"
       pacman: update_cache=true
@@ -294,7 +294,7 @@
           export HTTP_PROXY=""
           {% endif %}
           export JAVA_OPTS="{{ ofbiz_java_opts }}"
-          {% if ansible_os_family == 'Archlinux' %}
+          {% if ansible_facts.os_family == 'Archlinux' %}
           export PATH=/usr/lib/jvm/java-8-openjdk/bin:$PATH
           {% endif %}
 
