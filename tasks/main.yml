@@ -31,7 +31,7 @@
     msg: "You need to define the variable 'ofbiz_version' (e.g. ofbiz_version: '17.12.07')."
 
 - name: "Ubuntu packages"
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_facts.distribution == "Ubuntu"
   block:
     - name: "Add OpenJDK Apt key"
       apt_key:
@@ -67,7 +67,7 @@
         name: "openjdk-8-jdk-headless"
 
 - name: "Debian packages"
-  when: ansible_distribution == "Debian"
+  when: ansible_facts.distribution == "Debian"
   block:
     - name: "Update apt cache"
       apt:
@@ -95,7 +95,7 @@
 
     - name: "Configure Debian Apt Repository"
       apt_repository:
-        repo: "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb {{ ansible_distribution_release }} main"
+        repo: "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb {{ ansible_facts.distribution_release }} main"
         update_cache: true
       register: _debian_repository_added
 
