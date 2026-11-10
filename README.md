@@ -57,3 +57,12 @@ By default, you can log in with the user 'admin' and password 'ofbiz'.
 - [Install Apache OFBiz without demo data](https://cwiki.apache.org/confluence/display/OFBIZ/How+to+Install+OFBiz+without+the+Demo+Data)
 - [Apache OFBiz Tutorial - A Beginners Development Guide](https://cwiki.apache.org/confluence/display/OFBIZ/OFBiz+Tutorial+-+A+Beginners+Development+Guide)
 - [Apache OFBiz videos on YouTube](https://www.youtube.com/user/ofbiz) and [Apache OFBiz videos on Vimeo](https://vimeo.com/user2598348/videos/)
+
+Other projects by the same author:
+
+- [ansible-role-apt](https://github.com/jamescherti/ansible-role-apt)
+- [ansible-auto-upgrade](https://github.com/jamescherti/ansible-role-auto-upgrade)
+- [ansible-role-tuned](https://github.com/jamescherti/ansible-role-tuned)
+- [ansible-role-flatpak](https://github.com/jamescherti/ansible-role-flatpak)
+- [ansible-role-reniced](https://github.com/jamescherti/ansible-role-reniced)
+- [ansible-role-gitolite](https://github.com/jamescherti/ansible-role-gitolite)
